@@ -1,85 +1,169 @@
--- REX CHAT BOT | ORION UI
+--====================================================
+-- UNIVERSAL ROBLOX CHAT BOT | ORION UI
+--====================================================
 
+-- Services
 local Players = game:GetService("Players")
 local TextChatService = game:GetService("TextChatService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local LP = Players.LocalPlayer
+local LocalPlayer = Players.LocalPlayer
 
+--====================
+-- VARIABLES
+--====================
 local ChatSpam = false
-local ChatMessage = "Hello world!"
-local ChatDelay = 2
-local ChatCommands = true
+local ChatDelay = 1 -- FIXED TO 1 SECOND
+local ChatCommandsEnabled = true
 local TargetName = "PlayerName"
-local SpamThread = false
+local SpamThreadRunning = false
+local SpamMessage = ""
 
+--====================
+-- GENERATE SPAM MESSAGE
+--====================
+local function GenerateSpam()
+    local baseLine =
+        string.rep("_", 90)
+        .. " "
+        .. TargetName
+        .. " TMKX ME DRUM "
+
+    -- repeat to make it very long (1000+ characters)
+    SpamMessage = string.rep(baseLine, 12)
+end
+
+--====================
+-- CHAT SEND FUNCTION
+--====================
 local function SendChat(msg)
     pcall(function()
         if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
             TextChatService.TextChannels.RBXGeneral:SendAsync(msg)
         else
-            ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "All")
+            ReplicatedStorage
+                .DefaultChatSystemChatEvents
+                .SayMessageRequest
+                :FireServer(msg, "All")
         end
     end)
 end
 
+--====================
+-- START SPAM (SAFE)
+--====================
 local function StartSpam()
-    if SpamThread then return end
-    SpamThread = true
+    if SpamThreadRunning then return end
+    SpamThreadRunning = true
     ChatSpam = true
+    GenerateSpam()
+
     task.spawn(function()
         while ChatSpam do
             task.wait(ChatDelay)
-            SendChat("@" .. TargetName .. " " .. ChatMessage)
+            SendChat(SpamMessage)
         end
-        SpamThread = false
+        SpamThreadRunning = false
     end)
 end
 
-local function HandleChat(msg)
-    if not ChatCommands then return end
-    msg = msg:lower()
-    if msg == "hi bot" then
-        SendChat("hello rex sir")
-    elseif msg == "start spam" then
+--====================
+-- CHAT COMMAND HANDLER
+--====================
+local function HandleChatCommand(message)
+    if not ChatCommandsEnabled then return end
+    message = string.lower(message)
+
+    if message == "hi bot" then
+        SendChat("_______________________________________________________________________________________________________________________ HELLO REX SIR")
+    end
+
+    if message == "start spam" then
         SendChat("[BOT] Spam started")
         StartSpam()
-    elseif msg == "stop spam" then
+    end
+
+    if message == "stop spam" then
         ChatSpam = false
         SendChat("[BOT] Spam stopped")
     end
 end
 
+--====================
+-- CHAT LISTENER
+--====================
 if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-    TextChatService.MessageReceived:Connect(function(m)
-        if m.TextSource and Players:GetPlayerByUserId(m.TextSource.UserId) == LP then
-            HandleChat(m.Text)
+    TextChatService.MessageReceived:Connect(function(message)
+        if message.TextSource then
+            local plr = Players:GetPlayerByUserId(message.TextSource.UserId)
+            if plr == LocalPlayer then
+                HandleChatCommand(message.Text)
+            end
         end
     end)
 else
-    LP.Chatted:Connect(HandleChat)
+    LocalPlayer.Chatted:Connect(HandleChatCommand)
 end
 
-local Window = OrionLib:MakeWindow({Name="Rex Chat Bot",SaveConfig=true,ConfigFolder="RexBot"})
-local Tab = Window:MakeTab({Name="Chat Bot",Icon="rbxassetid://4483345998"})
+--====================
+-- ORION UI
+--====================
+local Window = OrionLib:MakeWindow({
+    Name = "Rex Chat Bot",
+    SaveConfig = true,
+    ConfigFolder = "RexBot"
+})
 
-Tab:AddTextbox({Name="Target Name",Default="PlayerName",Callback=function(v) TargetName=v end})
-Tab:AddTextbox({Name="Spam Message",Default="Hello world!",Callback=function(v) ChatMessage=v end})
-Tab:AddSlider({Name="Delay",Min=0.5,Max=10,Default=2,Increment=0.5,Callback=function(v) ChatDelay=v end})
+local BotTab = Window:MakeTab({
+    Name = "Chat Bot",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
-Tab:AddToggle({
-    Name="Chat Spam",
-    Callback=function(v)
-        if v then
+BotTab:AddButton({
+    Name = "Say HELLO REX SIR",
+    Callback = function()
+        SendChat("_______________________________________________________________________________________________________________________ HELLO REX SIR")
+    end
+})
+
+BotTab:AddTextbox({
+    Name = "Target / Hater Name",
+    Default = "PlayerName",
+    TextDisappear = false,
+    Callback = function(Value)
+        TargetName = Value
+        GenerateSpam()
+    end
+})
+
+BotTab:AddToggle({
+    Name = "Chat Spam",
+    Default = false,
+    Callback = function(Value)
+        if Value then
             SendChat("[BOT] Spam started")
             StartSpam()
         else
-            ChatSpam=false
+            ChatSpam = false
             SendChat("[BOT] Spam stopped")
         end
     end
 })
 
-Tab:AddToggle({Name="Chat Commands",Default=true,Callback=function(v) ChatCommands=v end})
-Tab:AddButton({Name="Destroy UI",Callback=function() OrionLib:Destroy() end})
+BotTab:AddToggle({
+    Name = "Enable Chat Commands",
+    Default = true,
+    Callback = function(Value)
+        ChatCommandsEnabled = Value
+    end
+})
+
+BotTab:AddButton({
+    Name = "Destroy UI",
+    Callback = function()
+        OrionLib:Destroy()
+    end
+})
 
 OrionLib:Init()
+
