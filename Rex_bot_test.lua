@@ -13,7 +13,7 @@ local LocalPlayer = Players.LocalPlayer
 --====================
 local ChatSpam = false
 local ChatDelay = 3 -- 3 seconds
-local TargetName = "PlayerName"
+local TargetName = "RyZ HATERS"
 local WordIndex = 1
 
 local Words = {
@@ -46,7 +46,7 @@ local function GetNextSpamMessage()
     if WordIndex > #Words then
         WordIndex = 1
     end
-    return "______________________________________________________________________________________________________________________________________________________________________ " .. TargetName .. " TMKX ME " .. word
+    return "______________________________________________________________________________________________________________________________________________________________________ " .. TargetName .. " TMKX MAI " .. word
 end
 
 --====================
@@ -57,20 +57,25 @@ local function HandleChatCommand(message)
 
     if message == "hi bot" or message == "bot" then
         SendChat("______________________________________________________________________________________________________________________________________________________________________HELLO REX SIR 💖")
+        return -- ensure only 1 message
     end
 
     if message == "start spam" then
-        ChatSpam = true
-        task.spawn(function()
-            while ChatSpam do
-                SendChat(GetNextSpamMessage())
-                task.wait(ChatDelay)
-            end
-        end)
+        if not ChatSpam then
+            ChatSpam = true
+            task.spawn(function()
+                while ChatSpam do
+                    SendChat(GetNextSpamMessage())
+                    task.wait(ChatDelay)
+                end
+            end)
+        end
+        return
     end
 
     if message == "stop spam" then
         ChatSpam = false
+        return
     end
 end
 
@@ -101,14 +106,14 @@ local Tab = Window:MakeTab({
     Icon = "rbxassetid://4483345998"
 })
 
--- Hater Name Box
+-- Hater Name Textbox
 Tab:AddTextbox({
     Name = "Hater Name",
-    Default = "PlayerName",
+    Default = "RyZ HATERS",
     TextDisappear = false,
     Callback = function(Value)
         TargetName = Value
-        WordIndex = 1 -- reset index
+        WordIndex = 1 -- reset index to start from first word
     end
 })
 
