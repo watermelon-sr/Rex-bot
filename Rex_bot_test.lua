@@ -1,5 +1,5 @@
 --====================================================
--- REX CHAT BOT | FINAL | DELTA SAFE
+-- REX CHAT BOT | DELTA SAFE | FINAL FIX
 --====================================================
 
 local Players = game:GetService("Players")
@@ -8,7 +8,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
 --====================
--- STATE
+-- SETTINGS
 --====================
 local ChatSpam = false
 local BotLocked = false
@@ -25,7 +25,7 @@ local Words = {
 }
 
 --====================
--- CHAT SEND
+-- SEND CHAT
 --====================
 local function SendChat(msg)
     pcall(function()
@@ -40,103 +40,92 @@ end
 --====================
 -- SPAM MESSAGE
 --====================
-local function NextSpam()
+local function GetNextSpamMessage()
     local word = Words[WordIndex]
     WordIndex += 1
-    if WordIndex > #Words then
-        WordIndex = 1
-    end
-    return "____________________________________________________________________________________________________ " ..
+    if WordIndex > #Words then WordIndex = 1 end
+    return "_________________________________________________________________________________________________________________________________________________________________ " ..
            TargetName .. " TMKX MAI " .. word
 end
 
 --====================
--- START SPAM
+-- START SPAM LOOP
 --====================
-local function StartSpam(resetIndex)
-    if resetIndex then
-        WordIndex = 1
-    end
-    if ChatSpam then return end
-    ChatSpam = true
+local function StartSpam()
+    if SpamThread then return end
     SpamThread = task.spawn(function()
         while ChatSpam do
-            SendChat(NextSpam())
-            task.wait(3 + math.random())
+            SendChat(GetNextSpamMessage())
+            task.wait(3 + math.random()) -- 3–4 sec
         end
+        SpamThread = nil
     end)
 end
 
 --====================
--- STOP SPAM
---====================
-local function StopSpam()
-    ChatSpam = false
-end
-
---====================
--- COMMAND HANDLER
+-- CHAT COMMANDS
 --====================
 local function HandleCommand(msg)
-    if BotLocked then return end
     msg = string.lower(msg)
 
-    if msg == "hi bot" or msg == "bot" then
-        SendChat("____________________________________________________________________________________________________ HELLO REX SIR 💖")
-        return
-    end
-
-    if msg == "start spam" then
-        SendChat("____________________________________________________________________________________________________ Spam starting in 20 seconds script by Rex")
-        task.delay(20, function()
-            if not BotLocked then
-                StartSpam(false)
-            end
-        end)
-        return
-    end
-
-    if msg == "start-" then
-        StartSpam(false)
-        return
-    end
-
-    if msg == "stop-" then
-        StopSpam()
-        StartSpam(true)
-        return
-    end
-
-    if msg == "stop spam" then
-        StopSpam()
+    if BotLocked then
+        if msg == "unlock bot" then
+            BotLocked = false
+            SendChat("_________________________________________________________________________________________________________________________________________________ bot unlocked🔓")
+        end
         return
     end
 
     if msg == "lock bot" then
         BotLocked = true
-        StopSpam()
-        SendChat("____________________________________________________________________________________________________ bot locked 🔐")
+        ChatSpam = false
+        SendChat("_____________________________________________________________________________________________________________________________________________________ bot locked 🔐")
         return
     end
 
-    if msg == "unlock bot" then
-        BotLocked = false
-        SendChat("____________________________________________________________________________________________________ bot unlocked 🔓")
+    if msg == "hi bot" or msg == "bot" then
+        SendChat("_________________________________________________________________________________________________________________________________________________________HELLO REX SIR 💖")
+        return
+    end
+
+    if msg == "start spam" then
+        if ChatSpam then return end
+        SendChat("________________________________________________________________________________________________________________________________ Spam starting in 20 seconds script by Rex")
+        task.delay(20, function()
+            if not BotLocked then
+                ChatSpam = true
+                StartSpam()
+            end
+        end)
+        return
+    end
+
+    if msg == "stop spam" then
+        ChatSpam = false
+        return
+    end
+
+    if msg == "stop" then
+        ChatSpam = false
+        return
+    end
+
+    if msg == "start" then
+        if not ChatSpam then
+            ChatSpam = true
+            StartSpam()
+        end
         return
     end
 end
 
 --====================
--- CHAT LISTENER (NO DUPLICATES)
+-- SINGLE CHAT LISTENER (NO DOUBLE)
 --====================
-if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-    TextChatService.OnIncomingMessage = function(m)
-        if m.TextSource and m.TextSource.UserId == LocalPlayer.UserId then
-            HandleCommand(m.Text)
-        end
+TextChatService.OnIncomingMessage = function(message)
+    if message.TextSource and message.TextSource.UserId == LocalPlayer.UserId then
+        HandleCommand(message.Text)
     end
-else
-    LocalPlayer.Chatted:Connect(HandleCommand)
 end
 
 --====================
@@ -159,6 +148,7 @@ Tab:AddTextbox({
     TextDisappear = false,
     Callback = function(v)
         TargetName = v
+        WordIndex = 1
     end
 })
 
@@ -166,11 +156,8 @@ Tab:AddToggle({
     Name = "Chat Spam",
     Default = false,
     Callback = function(v)
-        if v then
-            StartSpam(false)
-        else
-            StopSpam()
-        end
+        ChatSpam = v
+        if v then StartSpam() end
     end
 })
 
