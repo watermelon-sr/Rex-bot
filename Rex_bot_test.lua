@@ -2,9 +2,6 @@
 -- REX CHAT BOT | STABLE 1 MSG PER SECOND
 --====================================================
 
--- Load Orion
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
-
 -- Services
 local Players = game:GetService("Players")
 local TextChatService = game:GetService("TextChatService")
