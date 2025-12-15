@@ -49,7 +49,7 @@ local function GetNextSpamMessage()
     local word = Words[WordIndex]
     WordIndex += 1
     if WordIndex > #Words then WordIndex = 1 end
-    return "________________________________________________________________________________________________ " ..
+    return "_________________________________________________________________________________________________________________________________________________________________ " ..
            TargetName .. " TMKX MAI " .. word
 end
 
@@ -84,7 +84,7 @@ local function HandleCommand(msg)
     if BotLocked then
         if msg == "unlock bot" then
             BotLocked = false
-            SendChat("________________________________________________________________________________ bot unlocked 🔓")
+            SendChat("___________________________________________________________________________________________________________________________________________ bot unlocked 🔓")
         end
         return
     end
@@ -92,18 +92,18 @@ local function HandleCommand(msg)
     if msg == "lock bot" then
         BotLocked = true
         ChatSpam = false
-        SendChat("________________________________________________________________________________ bot locked 🔐")
+        SendChat("_______________________________________________________________________________________________________________________________________________ bot locked 🔐")
         return
     end
 
     if msg == "hi bot" or msg == "bot" then
-        SendChat("________________________________________________________________________________ HELLO REX SIR 💖")
+        SendChat("____________________________________________________________________________________________________________________________________________________________HELLO REX SIR 💖")
         return
     end
 
     if msg == "start spam" then
         if ChatSpam then return end
-        SendChat("________________________________________________________________________________ Spam starting in 20 seconds script by Rex")
+        SendChat("_________________________________________________________________________________________________________________________________________________ Spam starting in 20 seconds script by Rex")
         task.delay(20, function()
             if not BotLocked then
                 ChatSpam = true
