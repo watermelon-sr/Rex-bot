@@ -1,6 +1,7 @@
 --====================================================
 -- REX CHAT BOT | DELTA SAFE
 --====================================================
+
 -- Services
 local Players = game:GetService("Players")
 local TextChatService = game:GetService("TextChatService")
