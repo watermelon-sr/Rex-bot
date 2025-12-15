@@ -1,5 +1,5 @@
 --====================================================
--- REX CHAT BOT | DELTA SAFE | NO DOUBLE TEXT
+-- REX CHAT BOT | DELTA SAFE | FINAL FINAL FIX
 --====================================================
 
 -- Services
@@ -16,10 +16,8 @@ local BotLocked = false
 local TargetName = "RyZ HATERS"
 local WordIndex = 1
 local SpamThread = nil
-
--- Anti-duplicate system
-local LastMessage = ""
-local LastTime = 0
+local PendingStart = false
+local LastMessageId = nil
 
 local Words = {
     "BUILDING","CLASSROOM","STUDENT","KNOWLEDGE","LEARNING","SCIENCE","MATH","HISTORY",
@@ -49,8 +47,8 @@ local function GetNextSpamMessage()
     local word = Words[WordIndex]
     WordIndex += 1
     if WordIndex > #Words then WordIndex = 1 end
-    return "________________________________________________________________________________________________________________________________________________________________________ " ..
-           TargetName .. " TMKX MAI " .. word
+    return "_________________________________________________________________________________________________________________________________________________________________ "
+        .. TargetName .. " TMKX MAI " .. word
 end
 
 --====================
@@ -68,43 +66,50 @@ local function StartSpam()
 end
 
 --====================
--- COMMAND HANDLER
+-- CHAT COMMAND HANDLER
 --====================
 local function HandleCommand(msg)
-    local now = os.clock()
     msg = string.lower(msg)
 
-    -- 🔒 Anti double trigger
-    if msg == LastMessage and (now - LastTime) < 0.7 then
+    -- CHANGE HATER NAME COMMAND
+    local newName = msg:match("^bot change hater name to (.+)")
+    if newName then
+        TargetName = newName
+        WordIndex = 1
+        SendChat("__________________________________________________________________________________________________________________________________________________________ hater name changed to " .. newName)
         return
     end
-    LastMessage = msg
-    LastTime = now
 
+    -- BOT LOCKED
     if BotLocked then
         if msg == "unlock bot" then
             BotLocked = false
-            SendChat("___________________________________________________________________________________________________________________________________________ bot unlocked 🔓")
+            SendChat("____________________________________________________________________________________________________________________________________________________ bot unlocked🔓")
         end
         return
     end
 
+    -- LOCK BOT
     if msg == "lock bot" then
         BotLocked = true
         ChatSpam = false
-        SendChat("_______________________________________________________________________________________________________________________________________________ bot locked 🔐")
+        SendChat("__________________________________________________________________________________________________________________________________________________ bot locked 🔐")
         return
     end
 
+    -- HELLO COMMAND
     if msg == "hi bot" or msg == "bot" then
-        SendChat("________________________________________________________________________________________________________________________________________________________________HELLO REX SIR 💖")
+        SendChat("______________________________________________________________________________________________________________________________________________________________________HELLO REX SIR 💖")
         return
     end
 
+    -- START SPAM (WITH 20 SEC DELAY)
     if msg == "start spam" then
-        if ChatSpam then return end
-        SendChat("_______________________________________________________________________________________________________________________________________________________________ Spam starting in 20 seconds script by Rex")
+        if ChatSpam or PendingStart then return end
+        PendingStart = true
+        SendChat("__________________________________________________________________________________________________________________________________________ Spam starting in 20 seconds script by Rex")
         task.delay(20, function()
+            PendingStart = false
             if not BotLocked then
                 ChatSpam = true
                 StartSpam()
@@ -113,16 +118,19 @@ local function HandleCommand(msg)
         return
     end
 
+    -- STOP SPAM
     if msg == "stop spam" then
         ChatSpam = false
         return
     end
 
+    -- PAUSE
     if msg == "stop" then
         ChatSpam = false
         return
     end
 
+    -- RESUME
     if msg == "start" then
         if not ChatSpam then
             ChatSpam = true
@@ -133,12 +141,15 @@ local function HandleCommand(msg)
 end
 
 --====================
--- SINGLE CHAT LISTENER (FIXED)
+-- SINGLE CHAT LISTENER (ANTI-DOUBLE FIX)
 --====================
 TextChatService.OnIncomingMessage = function(message)
-    if message.TextSource and message.TextSource.UserId == LocalPlayer.UserId then
-        HandleCommand(message.Text)
-    end
+    if not message.TextSource then return end
+    if message.TextSource.UserId ~= LocalPlayer.UserId then return end
+    if message.MessageId == LastMessageId then return end
+
+    LastMessageId = message.MessageId
+    HandleCommand(message.Text)
 end
 
 --====================
