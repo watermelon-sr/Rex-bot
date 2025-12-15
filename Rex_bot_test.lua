@@ -1,5 +1,6 @@
+
 --====================================================
--- REX CHAT BOT | STABLE 1 MSG PER SECOND
+-- REX CHAT BOT | DELTA SAFE | ORION UI
 --====================================================
 
 -- Services
@@ -12,29 +13,27 @@ local LocalPlayer = Players.LocalPlayer
 -- VARIABLES
 --====================
 local ChatSpam = false
-local SpamRunning = false -- IMPORTANT: prevents duplicate loops
-local ChatDelay = 1 -- EXACTLY 1 second
+local SpamRunning = false
+local ChatDelay = 2 -- 2 seconds (safe)
 local TargetName = "PlayerName"
 
-local SpamMessages = {}
-local SpamIndex = 1
+local SpamWords = {
+    "DRUM",
+    "GUITAR",
+    "BASS",
+    "PIANO",
+    "MIC",
+    "SPEAKER",
+    "VIOLIN",
+    "TRUMPET",
+    "SYNTH",
+    "DJ"
+}
+
+local WordIndex = 1
 
 --====================
--- GENERATE SPAM LINES
---====================
-local function GenerateSpamMessages()
-    SpamMessages = {
-        "____________________________________________________________________________________________ " .. TargetName .. " TMKX ME DRUM",
-        "____________________________________________________________________________________________ " .. TargetName .. " TMKX ME GUITAR",
-        "____________________________________________________________________________________________ " .. TargetName .. " TMKX ME BASS",
-        "____________________________________________________________________________________________ " .. TargetName .. " TMKX ME MIC",
-        "____________________________________________________________________________________________ " .. TargetName .. " TMKX ME PIANO"
-    }
-    SpamIndex = 1
-end
-
---====================
--- SEND CHAT
+-- CHAT SEND
 --====================
 local function SendChat(msg)
     pcall(function()
@@ -47,48 +46,44 @@ local function SendChat(msg)
 end
 
 --====================
--- START SPAM (SAFE)
+-- GET NEXT SPAM MESSAGE
 --====================
-local function StartSpam()
-    if SpamRunning then return end -- PREVENT DOUBLE LOOP
-    SpamRunning = true
-    ChatSpam = true
-    GenerateSpamMessages()
+local function GetSpamMessage()
+    local word = SpamWords[WordIndex]
+    WordIndex += 1
+    if WordIndex > #SpamWords then
+        WordIndex = 1
+    end
 
-    task.spawn(function()
-        while ChatSpam do
-            SendChat(SpamMessages[SpamIndex])
-            SpamIndex = SpamIndex + 1
-            if SpamIndex > #SpamMessages then
-                SpamIndex = 1
-            end
-            task.wait(ChatDelay) -- EXACT 1 SECOND
-        end
-        SpamRunning = false
-    end)
+    return "____________________________________________________________________________________________ "
+        .. TargetName .. " TMKX ME " .. word
 end
 
 --====================
--- STOP SPAM
---====================
-local function StopSpam()
-    ChatSpam = false
-end
-
---====================
--- CHAT COMMANDS
+-- CHAT COMMAND HANDLER
 --====================
 local function HandleChatCommand(message)
     message = string.lower(message)
 
-    if message == "hi bot" then
-        SendChat("_______________________________________________________________________________________________________________________ HELLO REX SIR")
-    elseif message == "start spam" then
-        SendChat("[BOT] Spam started")
-        StartSpam()
-    elseif message == "stop spam" then
-        StopSpam()
-        SendChat("[BOT] Spam stopped")
+    if message == "bot/hi bot" then
+        SendChat("______________________________________________________________________________________________________________________________________________________________________________________________________________________________________ HELLO REX SIR")
+    end
+
+    if message == "start spam" and not SpamRunning then
+        ChatSpam = true
+        SpamRunning = true
+
+        task.spawn(function()
+            while ChatSpam do
+                task.wait(ChatDelay)
+                SendChat(GetSpamMessage())
+            end
+            SpamRunning = false
+        end)
+    end
+
+    if message == "stop spam" then
+        ChatSpam = false
     end
 end
 
@@ -96,9 +91,12 @@ end
 -- CHAT LISTENER
 --====================
 if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-    TextChatService.MessageReceived:Connect(function(message)
-        if message.TextSource and Players:GetPlayerByUserId(message.TextSource.UserId) == LocalPlayer then
-            HandleChatCommand(message.Text)
+    TextChatService.MessageReceived:Connect(function(msg)
+        if msg.TextSource then
+            local plr = Players:GetPlayerByUserId(msg.TextSource.UserId)
+            if plr == LocalPlayer then
+                HandleChatCommand(msg.Text)
+            end
         end
     end)
 else
@@ -106,7 +104,7 @@ else
 end
 
 --====================
--- UI
+-- ORION UI
 --====================
 local Window = OrionLib:MakeWindow({
     Name = "Rex Chat Bot",
@@ -114,47 +112,50 @@ local Window = OrionLib:MakeWindow({
     ConfigFolder = "RexBot"
 })
 
-local BotTab = Window:MakeTab({
+local Tab = Window:MakeTab({
     Name = "Chat Bot",
     Icon = "rbxassetid://4483345998"
 })
 
 -- Hello Button
-BotTab:AddButton({
+Tab:AddButton({
     Name = "Say HELLO REX SIR",
     Callback = function()
-        SendChat("_______________________________________________________________________________________________________________________ HELLO REX SIR")
+        SendChat("______________________________________________________________________________________________________________________________________________________________________________________________________________________________________ HELLO REX SIR")
     end
 })
 
--- HATER NAME TEXTBOX (WORKING)
-BotTab:AddTextbox({
+-- Hater Name Textbox (VISIBLE + WORKING)
+Tab:AddTextbox({
     Name = "Hater / Target Name",
     Default = "PlayerName",
     TextDisappear = false,
     Callback = function(Value)
         TargetName = Value
-        GenerateSpamMessages()
     end
 })
 
 -- Spam Toggle
-BotTab:AddToggle({
-    Name = "Chat Spam (1 msg / sec)",
+Tab:AddToggle({
+    Name = "Chat Spam",
     Default = false,
     Callback = function(Value)
-        if Value then
-            SendChat("[BOT] Spam started")
-            StartSpam()
-        else
-            StopSpam()
-            SendChat("[BOT] Spam stopped")
+        ChatSpam = Value
+        if Value and not SpamRunning then
+            SpamRunning = true
+            task.spawn(function()
+                while ChatSpam do
+                    task.wait(ChatDelay)
+                    SendChat(GetSpamMessage())
+                end
+                SpamRunning = false
+            end)
         end
     end
 })
 
 -- Destroy UI
-BotTab:AddButton({
+Tab:AddButton({
     Name = "Destroy UI",
     Callback = function()
         OrionLib:Destroy()
@@ -162,4 +163,3 @@ BotTab:AddButton({
 })
 
 OrionLib:Init()
-
