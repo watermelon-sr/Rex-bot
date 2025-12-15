@@ -1,7 +1,7 @@
+--====================================================
+-- REX CHAT BOT | DELTA SAFE
+--====================================================
 
---====================================================
--- REX CHAT BOT | DELTA SAFE | ORION UI
---====================================================
 -- Services
 local Players = game:GetService("Players")
 local TextChatService = game:GetService("TextChatService")
@@ -9,27 +9,33 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
 --====================
--- VARIABLES
+-- SETTINGS
 --====================
 local ChatSpam = false
-local SpamRunning = false
-local ChatDelay = 2 -- 2 seconds (safe)
+local ChatDelay = 3 -- 3 seconds ONLY
 local TargetName = "PlayerName"
-
-local SpamWords = {
-    "DRUM",
-    "GUITAR",
-    "BASS",
-    "PIANO",
-    "MIC",
-    "SPEAKER",
-    "VIOLIN",
-    "TRUMPET",
-    "SYNTH",
-    "DJ"
-}
-
 local WordIndex = 1
+
+--====================
+-- WORD LIST (ONE WORD PER MESSAGE)
+--====================
+local Words = {
+"BUILDING","CLASSROOM","STUDENT","KNOWLEDGE","LEARNING","SCIENCE","MATH","HISTORY","GEOGRAPHY",
+"PHYSICS","CHEMISTRY","BIOLOGY","LABORATORY","EXPERIMENT","FORMULA","EQUATION","PARAMETER",
+"VARIABLE","CONSTANT","MEASUREMENT","THERMOMETER","TEMPERATURE","PRESSURE","GRAVITY","ENERGY",
+"MOTION","CYCLE","ROTATION","REVOLUTION","ORBIT","SPACE","PLANET","EARTH","MOON","MARS",
+"JUPITER","SATURN","NEPTUNE","URANUS","PLUTO","GALAXY","MILKYWAY","NEBULA","STAR","SUN",
+"SUPERNOVA","BLACKHOLE","UNIVERSE","COSMOS","DIMENSION","TIMELINE","REALITY","PARALLEL",
+"QUANTUM","PARTICLE","ATOM","MOLECULE","ELEMENT","COMPOUND","REACTION","FUSION","FISSION",
+"ELECTRICITY","MAGNETISM","CURRENT","VOLTAGE","RESISTANCE","CIRCUIT","MACHINE","ENGINE",
+"MOTOR","ROBOT","ANDROID","TECHNOLOGY","SOFTWARE","HARDWARE","NETWORK","INTERNET",
+"SIGNAL","FREQUENCY","WAVELENGTH","SPECTRUM","RADIATION","SATELLITE","ANTENNA","RADAR",
+"TELESCOPE","MICROSCOPE","OBSERVATION","ANALYSIS","CALCULATION","PREDICTION","SIMULATION",
+"MODEL","STRUCTURE","SYSTEM","FRAMEWORK","ALGORITHM","LOGIC","REASON","THOUGHT","MIND",
+"BRAIN","MEMORY","IMAGINATION","CREATIVITY","DREAM","VISION","IDEA","CONCEPT","THEORY",
+"HYPOTHESIS","DISCOVERY","INVENTION","INNOVATION","PROGRESS","FUTURE","PAST","PRESENT",
+"TIME","CLOCK","SECOND","MINUTE","HOUR","DAY","NIGHT","SEASON","YEAR","CENTURY","MILLENNIUM"
+}
 
 --====================
 -- CHAT SEND
@@ -39,50 +45,51 @@ local function SendChat(msg)
         if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
             TextChatService.TextChannels.RBXGeneral:SendAsync(msg)
         else
-            ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "All")
+            ReplicatedStorage.DefaultChatSystemChatEvents
+                .SayMessageRequest:FireServer(msg, "All")
         end
     end)
 end
 
 --====================
--- GET NEXT SPAM MESSAGE
+-- SPAM LOOP (SAFE)
 --====================
-local function GetSpamMessage()
-    local word = SpamWords[WordIndex]
-    WordIndex += 1
-    if WordIndex > #SpamWords then
-        WordIndex = 1
-    end
+local function StartSpam()
+    if ChatSpam then return end
+    ChatSpam = true
 
-    return "____________________________________________________________________________________________ "
-        .. TargetName .. " TMKX ME " .. word
+    task.spawn(function()
+        while ChatSpam do
+            local word = Words[WordIndex]
+            WordIndex = WordIndex + 1
+            if WordIndex > #Words then
+                WordIndex = 1
+            end
+
+            SendChat("____________________________________________________________________________________________ " ..
+                TargetName .. " TMKX ME " .. word)
+
+            task.wait(ChatDelay)
+        end
+    end)
+end
+
+local function StopSpam()
+    ChatSpam = false
 end
 
 --====================
--- CHAT COMMAND HANDLER
+-- COMMAND HANDLER
 --====================
-local function HandleChatCommand(message)
-    message = string.lower(message)
+local function HandleChat(msg)
+    msg = string.lower(msg)
 
-    if message == "bot/hi bot" then
-        SendChat("______________________________________________________________________________________________________________________________________________________________________________________________________________________________________ HELLO REX SIR")
-    end
-
-    if message == "start spam" and not SpamRunning then
-        ChatSpam = true
-        SpamRunning = true
-
-        task.spawn(function()
-            while ChatSpam do
-                task.wait(ChatDelay)
-                SendChat(GetSpamMessage())
-            end
-            SpamRunning = false
-        end)
-    end
-
-    if message == "stop spam" then
-        ChatSpam = false
+    if msg == "hi bot" or msg == "bot/hi bot" then
+        SendChat("_____________________________________________________________________________________________________________________________________________________________________________________________________________________________________ HELLO REX SIR")
+    elseif msg == "start spam" then
+        StartSpam()
+    elseif msg == "stop spam" then
+        StopSpam()
     end
 end
 
@@ -90,20 +97,17 @@ end
 -- CHAT LISTENER
 --====================
 if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-    TextChatService.MessageReceived:Connect(function(msg)
-        if msg.TextSource then
-            local plr = Players:GetPlayerByUserId(msg.TextSource.UserId)
-            if plr == LocalPlayer then
-                HandleChatCommand(msg.Text)
-            end
+    TextChatService.MessageReceived:Connect(function(m)
+        if m.TextSource and Players:GetPlayerByUserId(m.TextSource.UserId) == LocalPlayer then
+            HandleChat(m.Text)
         end
     end)
 else
-    LocalPlayer.Chatted:Connect(HandleChatCommand)
+    LocalPlayer.Chatted:Connect(HandleChat)
 end
 
 --====================
--- ORION UI
+-- UI
 --====================
 local Window = OrionLib:MakeWindow({
     Name = "Rex Chat Bot",
@@ -113,24 +117,16 @@ local Window = OrionLib:MakeWindow({
 
 local Tab = Window:MakeTab({
     Name = "Chat Bot",
-    Icon = "rbxassetid://4483345998"
+    PremiumOnly = false
 })
 
--- Hello Button
-Tab:AddButton({
-    Name = "Say HELLO REX SIR",
-    Callback = function()
-        SendChat("______________________________________________________________________________________________________________________________________________________________________________________________________________________________________ HELLO REX SIR")
-    end
-})
-
--- Hater Name Textbox (VISIBLE + WORKING)
+-- Hater Name Textbox
 Tab:AddTextbox({
     Name = "Hater / Target Name",
     Default = "PlayerName",
     TextDisappear = false,
-    Callback = function(Value)
-        TargetName = Value
+    Callback = function(v)
+        TargetName = v
     end
 })
 
@@ -138,22 +134,16 @@ Tab:AddTextbox({
 Tab:AddToggle({
     Name = "Chat Spam",
     Default = false,
-    Callback = function(Value)
-        ChatSpam = Value
-        if Value and not SpamRunning then
-            SpamRunning = true
-            task.spawn(function()
-                while ChatSpam do
-                    task.wait(ChatDelay)
-                    SendChat(GetSpamMessage())
-                end
-                SpamRunning = false
-            end)
+    Callback = function(v)
+        if v then
+            StartSpam()
+        else
+            StopSpam()
         end
     end
 })
 
--- Destroy UI
+-- Destroy
 Tab:AddButton({
     Name = "Destroy UI",
     Callback = function()
@@ -162,3 +152,4 @@ Tab:AddButton({
 })
 
 OrionLib:Init()
+
