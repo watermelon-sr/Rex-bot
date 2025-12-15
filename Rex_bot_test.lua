@@ -1,19 +1,20 @@
 --====================================================
--- REX CHAT BOT | DELTA SAFE
+-- REX CHAT BOT | FINAL | DELTA SAFE
 --====================================================
 
--- Services
 local Players = game:GetService("Players")
 local TextChatService = game:GetService("TextChatService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
 --====================
--- SETTINGS
+-- STATE
 --====================
 local ChatSpam = false
+local BotLocked = false
 local TargetName = "RyZ HATERS"
 local WordIndex = 1
+local SpamThread = nil
 
 local Words = {
     "BUILDING","CLASSROOM","STUDENT","KNOWLEDGE","LEARNING","SCIENCE","MATH","HISTORY",
@@ -24,7 +25,7 @@ local Words = {
 }
 
 --====================
--- SEND CHAT FUNCTION
+-- CHAT SEND
 --====================
 local function SendChat(msg)
     pcall(function()
@@ -37,61 +38,105 @@ local function SendChat(msg)
 end
 
 --====================
--- GET NEXT SPAM MESSAGE
+-- SPAM MESSAGE
 --====================
-local function GetNextSpamMessage()
+local function NextSpam()
     local word = Words[WordIndex]
-    WordIndex = WordIndex + 1
+    WordIndex += 1
     if WordIndex > #Words then
         WordIndex = 1
     end
-    return "_________________________________________________________________________________________________________________________________________________________________ " .. TargetName .. " TMKX MAI " .. word
+    return "____________________________________________________________________________________________________ " ..
+           TargetName .. " TMKX MAI " .. word
 end
 
 --====================
--- HANDLE CHAT COMMAND
+-- START SPAM
 --====================
-local function HandleChatCommand(message)
-    message = string.lower(message)
-
-    -- hi bot or bot command
-    if message == "hi bot" or message == "bot" then
-        SendChat("______________________________________________________________________________________________________________________________________________________________________HELLO REX SIR 💖")
-        return
+local function StartSpam(resetIndex)
+    if resetIndex then
+        WordIndex = 1
     end
-
-    -- start spam
-    if message == "start spam" then
-        if not ChatSpam then
-            ChatSpam = true
-            task.spawn(function()
-                while ChatSpam do
-                    SendChat(GetNextSpamMessage())
-                    task.wait(3 + math.random()) -- random delay 3-4 seconds
-                end
-            end)
+    if ChatSpam then return end
+    ChatSpam = true
+    SpamThread = task.spawn(function()
+        while ChatSpam do
+            SendChat(NextSpam())
+            task.wait(3 + math.random())
         end
+    end)
+end
+
+--====================
+-- STOP SPAM
+--====================
+local function StopSpam()
+    ChatSpam = false
+end
+
+--====================
+-- COMMAND HANDLER
+--====================
+local function HandleCommand(msg)
+    if BotLocked then return end
+    msg = string.lower(msg)
+
+    if msg == "hi bot" or msg == "bot" then
+        SendChat("____________________________________________________________________________________________________ HELLO REX SIR 💖")
         return
     end
 
-    -- stop spam
-    if message == "stop spam" then
-        ChatSpam = false
+    if msg == "start spam" then
+        SendChat("____________________________________________________________________________________________________ Spam starting in 20 seconds script by Rex")
+        task.delay(20, function()
+            if not BotLocked then
+                StartSpam(false)
+            end
+        end)
+        return
+    end
+
+    if msg == "start-" then
+        StartSpam(false)
+        return
+    end
+
+    if msg == "stop-" then
+        StopSpam()
+        StartSpam(true)
+        return
+    end
+
+    if msg == "stop spam" then
+        StopSpam()
+        return
+    end
+
+    if msg == "lock bot" then
+        BotLocked = true
+        StopSpam()
+        SendChat("____________________________________________________________________________________________________ bot locked 🔐")
+        return
+    end
+
+    if msg == "unlock bot" then
+        BotLocked = false
+        SendChat("____________________________________________________________________________________________________ bot unlocked 🔓")
         return
     end
 end
 
 --====================
--- CHAT LISTENER
+-- CHAT LISTENER (NO DUPLICATES)
 --====================
 if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-    TextChatService.OnIncomingMessage = function(message)
-        if message.TextSource and message.TextSource.UserId == LocalPlayer.UserId then
-            HandleChatCommand(message.Text)
+    TextChatService.OnIncomingMessage = function(m)
+        if m.TextSource and m.TextSource.UserId == LocalPlayer.UserId then
+            HandleCommand(m.Text)
         end
     end
 else
-    LocalPlayer.Chatted:Connect(HandleChatCommand)
+    LocalPlayer.Chatted:Connect(HandleCommand)
 end
 
 --====================
@@ -108,35 +153,27 @@ local Tab = Window:MakeTab({
     Icon = "rbxassetid://4483345998"
 })
 
--- Hater Name Textbox
 Tab:AddTextbox({
     Name = "Hater Name",
     Default = "RyZ HATERS",
     TextDisappear = false,
-    Callback = function(Value)
-        TargetName = Value
-        WordIndex = 1 -- reset index
+    Callback = function(v)
+        TargetName = v
     end
 })
 
--- Spam Toggle
 Tab:AddToggle({
     Name = "Chat Spam",
     Default = false,
-    Callback = function(Value)
-        ChatSpam = Value
-        if ChatSpam then
-            task.spawn(function()
-                while ChatSpam do
-                    SendChat(GetNextSpamMessage())
-                    task.wait(3 + math.random()) -- random delay 3-4 seconds
-                end
-            end)
+    Callback = function(v)
+        if v then
+            StartSpam(false)
+        else
+            StopSpam()
         end
     end
 })
 
--- Destroy UI
 Tab:AddButton({
     Name = "Destroy UI",
     Callback = function()
