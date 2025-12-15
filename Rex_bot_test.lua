@@ -1,7 +1,8 @@
 --====================================================
--- REX CHAT BOT | DELTA SAFE | FINAL FIX
+-- REX CHAT BOT | DELTA SAFE | NO DOUBLE TEXT
 --====================================================
 
+-- Services
 local Players = game:GetService("Players")
 local TextChatService = game:GetService("TextChatService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -15,6 +16,10 @@ local BotLocked = false
 local TargetName = "RyZ HATERS"
 local WordIndex = 1
 local SpamThread = nil
+
+-- Anti-duplicate system
+local LastMessage = ""
+local LastTime = 0
 
 local Words = {
     "BUILDING","CLASSROOM","STUDENT","KNOWLEDGE","LEARNING","SCIENCE","MATH","HISTORY",
@@ -63,15 +68,23 @@ local function StartSpam()
 end
 
 --====================
--- CHAT COMMANDS
+-- COMMAND HANDLER
 --====================
 local function HandleCommand(msg)
+    local now = os.clock()
     msg = string.lower(msg)
+
+    -- 🔒 Anti double trigger
+    if msg == LastMessage and (now - LastTime) < 0.7 then
+        return
+    end
+    LastMessage = msg
+    LastTime = now
 
     if BotLocked then
         if msg == "unlock bot" then
             BotLocked = false
-            SendChat("__________________________________________________________________________________________________________________________________________________________ bot unlocked🔓")
+            SendChat("___________________________________________________________________________________________________________________________________________________________________ bot unlocked 🔓")
         end
         return
     end
@@ -79,18 +92,18 @@ local function HandleCommand(msg)
     if msg == "lock bot" then
         BotLocked = true
         ChatSpam = false
-        SendChat("______________________________________________________________________________________________________________________________________________________________ bot locked 🔐")
+        SendChat("____________________________________________________________________________________________________________________________________________________________________ bot locked 🔐")
         return
     end
 
     if msg == "hi bot" or msg == "bot" then
-        SendChat("_______________________________________________________________________________________________________________________________________________________________HELLO REX SIR 💖")
+        SendChat(hat("____________________________________________________________________________________________________________________________________________________________________ HELLO REX SIRh
         return
     end
 
     if msg == "start spam" then
         if ChatSpam then return end
-        SendChat("_________________________________________________________________________________________________________________________________________________ Spam starting in 20 seconds script by Rex")
+        SendChat("________________________________________________________________________________________________________________________________________________________ Spam starting in 20 seconds script by Rex")
         task.delay(20, function()
             if not BotLocked then
                 ChatSpam = true
@@ -120,7 +133,7 @@ local function HandleCommand(msg)
 end
 
 --====================
--- SINGLE CHAT LISTENER (NO DOUBLE)
+-- SINGLE CHAT LISTENER (FIXED)
 --====================
 TextChatService.OnIncomingMessage = function(message)
     if message.TextSource and message.TextSource.UserId == LocalPlayer.UserId then
