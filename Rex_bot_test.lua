@@ -11,7 +11,7 @@ local LocalPlayer = Players.LocalPlayer
 -- ACCESS CONTROL
 --====================
 local AllowedUsers = {
-    ["YourUsernameHere"] = true,
+    ["denjifwher"] = true,
     ["FriendUsername"] = true
 }
 
