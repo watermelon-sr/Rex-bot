@@ -12,11 +12,10 @@ local LocalPlayer = Players.LocalPlayer
 -- SETTINGS
 --====================
 local ChatSpam = false
-local ChatDelay = 3 -- 3 seconds (SAFE)
+local ChatDelay = 3 -- 3 seconds
 local TargetName = "PlayerName"
 local WordIndex = 1
 
--- Words after "TMKX MAI"
 local Words = {
     "BUILDING","CLASSROOM","STUDENT","KNOWLEDGE","LEARNING","SCIENCE","MATH","HISTORY",
     "GEOGRAPHY","PHYSICS","CHEMISTRY","BIOLOGY","LABORATORY","EXPERIMENT","FORMULA",
@@ -26,7 +25,7 @@ local Words = {
 }
 
 --====================
--- SEND CHAT
+-- SEND CHAT FUNCTION
 --====================
 local function SendChat(msg)
     pcall(function()
@@ -39,19 +38,19 @@ local function SendChat(msg)
 end
 
 --====================
--- SPAM MESSAGE
+-- GET NEXT SPAM MESSAGE
 --====================
 local function GetNextSpamMessage()
     local word = Words[WordIndex]
-    WordIndex += 1
+    WordIndex = WordIndex + 1
     if WordIndex > #Words then
         WordIndex = 1
     end
-    return "__________________________________________________________________________________________________________________________________________________________________ " .. RyZ HATERS.. " TMKX ME " .. word
+    return "______________________________________________________________________________________________________________________________________________________________________ " .. TargetName .. " TMKX ME " .. word
 end
 
 --====================
--- CHAT COMMANDS
+-- HANDLE CHAT COMMAND
 --====================
 local function HandleChatCommand(message)
     message = string.lower(message)
@@ -60,7 +59,7 @@ local function HandleChatCommand(message)
         SendChat("______________________________________________________________________________________________________________________________________________________________________HELLO REX SIR 💖")
     end
 
-    if message == "start spam" and not ChatSpam then
+    if message == "start spam" then
         ChatSpam = true
         task.spawn(function()
             while ChatSpam do
@@ -79,14 +78,11 @@ end
 -- CHAT LISTENER
 --====================
 if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-    TextChatService.MessageReceived:Connect(function(msg)
-        if msg.TextSource then
-            local plr = Players:GetPlayerByUserId(msg.TextSource.UserId)
-            if plr == LocalPlayer then
-                HandleChatCommand(msg.Text)
-            end
+    TextChatService.OnIncomingMessage = function(message)
+        if message.TextSource and message.TextSource.UserId == LocalPlayer.UserId then
+            HandleChatCommand(message.Text)
         end
-    end)
+    end
 else
     LocalPlayer.Chatted:Connect(HandleChatCommand)
 end
@@ -112,6 +108,7 @@ Tab:AddTextbox({
     TextDisappear = false,
     Callback = function(Value)
         TargetName = Value
+        WordIndex = 1 -- reset index
     end
 })
 
