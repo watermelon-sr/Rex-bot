@@ -2,7 +2,6 @@
 --====================================================
 -- REX CHAT BOT | DELTA SAFE | ORION UI
 --====================================================
-
 -- Services
 local Players = game:GetService("Players")
 local TextChatService = game:GetService("TextChatService")
