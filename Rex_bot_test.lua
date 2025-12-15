@@ -12,7 +12,6 @@ local LocalPlayer = Players.LocalPlayer
 -- SETTINGS
 --====================
 local ChatSpam = false
-local ChatDelay = 3 -- 3 seconds
 local TargetName = "RyZ HATERS"
 local WordIndex = 1
 
@@ -46,7 +45,7 @@ local function GetNextSpamMessage()
     if WordIndex > #Words then
         WordIndex = 1
     end
-    return "______________________________________________________________________________________________________________________________________________________________________ " .. TargetName .. " TMKX MAI " .. word
+    return "_________________________________________________________________________________________________________________________________________________________________ " .. TargetName .. " TMKX MAI " .. word
 end
 
 --====================
@@ -55,24 +54,27 @@ end
 local function HandleChatCommand(message)
     message = string.lower(message)
 
+    -- hi bot or bot command
     if message == "hi bot" or message == "bot" then
         SendChat("______________________________________________________________________________________________________________________________________________________________________HELLO REX SIR 💖")
-        return -- ensure only 1 message
+        return
     end
 
+    -- start spam
     if message == "start spam" then
         if not ChatSpam then
             ChatSpam = true
             task.spawn(function()
                 while ChatSpam do
                     SendChat(GetNextSpamMessage())
-                    task.wait(ChatDelay)
+                    task.wait(3 + math.random()) -- random delay 3-4 seconds
                 end
             end)
         end
         return
     end
 
+    -- stop spam
     if message == "stop spam" then
         ChatSpam = false
         return
@@ -113,7 +115,7 @@ Tab:AddTextbox({
     TextDisappear = false,
     Callback = function(Value)
         TargetName = Value
-        WordIndex = 1 -- reset index to start from first word
+        WordIndex = 1 -- reset index
     end
 })
 
@@ -127,7 +129,7 @@ Tab:AddToggle({
             task.spawn(function()
                 while ChatSpam do
                     SendChat(GetNextSpamMessage())
-                    task.wait(ChatDelay)
+                    task.wait(3 + math.random()) -- random delay 3-4 seconds
                 end
             end)
         end
