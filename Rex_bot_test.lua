@@ -13,11 +13,11 @@ local LocalPlayer = Players.LocalPlayer
 --====================
 local ChatSpam = false
 local BotLocked = false
-local TargetName = "" -- controlled ONLY by TextBox
-local WordIndex = 1
+local TargetName = ""
 local SpamThread = nil
 local PendingStart = false
 local LastMessageId = nil
+local WordIndex = 1
 
 --====================
 -- EMOJIS
@@ -27,24 +27,22 @@ local Emojis = {
 }
 
 --====================
--- WORD LIST
+-- FUNNY / LOCAL WORDS ONLY
 --====================
 local Words = {
-    -- original words
-    "BUILDING","CLASSROOM","STUDENT","KNOWLEDGE","LEARNING","SCIENCE","MATH","HISTORY",
-    "GEOGRAPHY","PHYSICS","CHEMISTRY","BIOLOGY","LABORATORY","EXPERIMENT","FORMULA",
-    "EQUATION","ENERGY","MOTION","SPACE","PLANET","GALAXY","UNIVERSE","QUANTUM",
-    "ATOM","MOLECULE","ELECTRICITY","TECHNOLOGY","SOFTWARE","HARDWARE","INTERNET",
-    "ALGORITHM","LOGIC","MEMORY","CREATIVITY","DISCOVERY","INNOVATION","FUTURE",
-
-    -- local / funny words (50+)
-    "CUDE","PGL","SUSU","POTY JAPAN","SKYROCKET","CUTIA","CHXMR","DALIT","CUDGY","BAUNI",
-    "KALVY","JHADU WALI","POCHA LGATY","PETICOAT","MURGI","TRACTOR","KHNJR","RDY",
+    "CUDE","PGL","SUSU","POTY","JAPAN","SKYROCKET","CUTIA","CHXMR","CUDGY","BAUNI",
+    "KALVY","JHADU WALI","POCHA LGATY","PETICOAT","MURGI","TRACTOR","KHNAJR","RDY",
     "ACID","BASE","SALT","SPEED","HACLY","LAME","BHONDU","BIHRY","S1DE CH1CK",
-    "COTI","M0TY","DRUM","KEEDA","HELICOPTER","OYE","BHNGY","BHAGE","HAWSI",
-    "RUSIA","BUDHI","GUTKA","PAPPU","CHAMCHA","KAMINA","NAKKI","KHALI DIMAG",
-    "DHAKKAN","JOKER","TIKTOKIYA","GADHA","ULLU","BHOOTNI","NALLA","CHINDI",
-    "BHAISAAB","BOTAL","BESHARAM","HILTA","CHAMAK","LATTH","TADAK","BHUKKAD"
+    "COTI","M0TY","DRUM","KEEDA","HELICOPTER","OYE","BHANGY","BHAGE","HAWASI",
+    "RUSSIA","BUDHI","GUTKA","PAPPU","CHAMCHA","KAMINA","NAKKI","KHALI DIMAG",
+    "DHAKKAN","JOKER","GHODI","GADHA","ULLU","BHOOTNI","NALLA","CHINDI",
+    "BHAISAAB","BOTAL","BESHARAM","HILTA","CHAMAK","LATTH","TADAK","BHUKKAD",
+
+    -- NEW WORDS
+    "KAMWALI","SUWR","GUTTER","CHAPPAL","HATHI","BILLI","BANDAR","GYANGAMING",
+    "SADAKCHAAP","NAALI","CHIMTA","JHOPDI","PHATTA","KACHRA","JUNK",
+    "CHIKNA","FISADU","TAPORI","CHINDI CHOR","BHIKMANGI","DABBA",
+    "ULTA DIMAG","BHARWA","KHAALI","DHEELA","NITHALLA"
 }
 
 --====================
@@ -72,7 +70,7 @@ local function GetNextSpamMessage()
 
     local namePart = TargetName ~= "" and (TargetName .. " ") or ""
 
-    return "_________________________________________________________________________________________________________________________________________________________________ "
+    return "______________________________________________________________________________________________________________________________________________________________ "
         .. namePart .. "TRY MA " .. word .. " " .. emoji
 end
 
@@ -145,7 +143,7 @@ local function HandleCommand(msg)
 end
 
 --====================
--- SINGLE CHAT LISTENER (ANTI-DOUBLE FIX)
+-- SINGLE CHAT LISTENER
 --====================
 TextChatService.OnIncomingMessage = function(message)
     if not message.TextSource then return end
@@ -191,14 +189,12 @@ end)
 local box = Instance.new("TextBox", frame)
 box.Size = UDim2.new(1, -20, 0, 30)
 box.Position = UDim2.new(0, 10, 0, 40)
-box.Text = ""
 box.PlaceholderText = "Enter name"
 box.BackgroundColor3 = Color3.fromRGB(20,20,20)
 box.TextColor3 = Color3.new(1,1,1)
 
 box.FocusLost:Connect(function()
     TargetName = box.Text
-    WordIndex = 1
 end)
 
 local startBtn = Instance.new("TextButton", frame)
