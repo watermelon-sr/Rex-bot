@@ -24,7 +24,9 @@ local Words = {
     "GEOGRAPHY","PHYSICS","CHEMISTRY","BIOLOGY","LABORATORY","EXPERIMENT","FORMULA",
     "EQUATION","ENERGY","MOTION","SPACE","PLANET","GALAXY","UNIVERSE","QUANTUM",
     "ATOM","MOLECULE","ELECTRICITY","TECHNOLOGY","SOFTWARE","HARDWARE","INTERNET",
-    "ALGORITHM","LOGIC","MEMORY","CREATIVITY","DISCOVERY","INNOVATION","FUTURE"
+    "ALGORITHM","LOGIC","MEMORY","CREATIVITY","DISCOVERY","INNOVATION","FUTURE",
+    "AREY","BHAI","KYA","SCENE","OP","LOL","BINDASS","CHILL","MAST","JHAKKAS",
+    "😂🔥","😁💞","😑✌🏻","🚀","😁💕","🌴🔥","😂👌🏿","💪😁"
 }
 
 --====================
@@ -48,7 +50,7 @@ local function GetNextSpamMessage()
     WordIndex += 1
     if WordIndex > #Words then WordIndex = 1 end
     return "_________________________________________________________________________________________________________________________________________________________________ "
-        .. TargetName .. " TMKX MAI " .. word
+        .. TargetName .. " TRY MA " .. word
 end
 
 --====================
@@ -59,7 +61,7 @@ local function StartSpam()
     SpamThread = task.spawn(function()
         while ChatSpam do
             SendChat(GetNextSpamMessage())
-            task.wait(3 + math.random()) -- 3–4 sec
+            task.wait(2 + math.random()) -- 2–3 sec
         end
         SpamThread = nil
     end)
@@ -71,7 +73,6 @@ end
 local function HandleCommand(msg)
     msg = string.lower(msg)
 
-    -- CHANGE HATER NAME COMMAND
     local newName = msg:match("^bot change hater name to (.+)")
     if newName then
         TargetName = newName
@@ -80,7 +81,6 @@ local function HandleCommand(msg)
         return
     end
 
-    -- BOT LOCKED
     if BotLocked then
         if msg == "unlock bot" then
             BotLocked = false
@@ -89,7 +89,6 @@ local function HandleCommand(msg)
         return
     end
 
-    -- LOCK BOT
     if msg == "lock bot" then
         BotLocked = true
         ChatSpam = false
@@ -97,13 +96,11 @@ local function HandleCommand(msg)
         return
     end
 
-    -- HELLO COMMAND
     if msg == "hi bot" or msg == "bot" then
         SendChat("______________________________________________________________________________________________________________________________________________________________________HELLO REX SIR 💖")
         return
     end
 
-    -- START SPAM (WITH 20 SEC DELAY)
     if msg == "start spam" then
         if ChatSpam or PendingStart then return end
         PendingStart = true
@@ -118,19 +115,11 @@ local function HandleCommand(msg)
         return
     end
 
-    -- STOP SPAM
-    if msg == "stop spam" then
+    if msg == "stop spam" or msg == "stop" then
         ChatSpam = false
         return
     end
 
-    -- PAUSE
-    if msg == "stop" then
-        ChatSpam = false
-        return
-    end
-
-    -- RESUME
     if msg == "start" then
         if not ChatSpam then
             ChatSpam = true
@@ -153,44 +142,66 @@ TextChatService.OnIncomingMessage = function(message)
 end
 
 --====================
--- ORION UI
+-- SMALL BLACK GUI (REX BOT)
 --====================
-local Window = OrionLib:MakeWindow({
-    Name = "Rex Chat Bot",
-    SaveConfig = true,
-    ConfigFolder = "RexBot"
-})
+local gui = Instance.new("ScreenGui", LocalPlayer.PlayerGui)
+gui.Name = "RexBotGUI"
 
-local Tab = Window:MakeTab({
-    Name = "Chat Bot",
-    Icon = "rbxassetid://4483345998"
-})
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 220, 0, 140)
+frame.Position = UDim2.new(0.02, 0, 0.4, 0)
+frame.BackgroundColor3 = Color3.fromRGB(0,0,0)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
 
-Tab:AddTextbox({
-    Name = "Hater Name",
-    Default = "RyZ HATERS",
-    TextDisappear = false,
-    Callback = function(v)
-        TargetName = v
-        WordIndex = 1
-    end
-})
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, -30, 0, 25)
+title.Text = "rex bot"
+title.TextColor3 = Color3.new(1,1,1)
+title.BackgroundTransparency = 1
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 16
 
-Tab:AddToggle({
-    Name = "Chat Spam",
-    Default = false,
-    Callback = function(v)
-        ChatSpam = v
-        if v then StartSpam() end
-    end
-})
+local close = Instance.new("TextButton", frame)
+close.Size = UDim2.new(0, 25, 0, 25)
+close.Position = UDim2.new(1, -25, 0, 0)
+close.Text = "✖"
+close.BackgroundColor3 = Color3.fromRGB(30,30,30)
+close.TextColor3 = Color3.new(1,0,0)
+close.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
 
-Tab:AddButton({
-    Name = "Destroy UI",
-    Callback = function()
-        OrionLib:Destroy()
-    end
-})
+local box = Instance.new("TextBox", frame)
+box.Size = UDim2.new(1, -20, 0, 30)
+box.Position = UDim2.new(0, 10, 0, 40)
+box.Text = TargetName
+box.BackgroundColor3 = Color3.fromRGB(20,20,20)
+box.TextColor3 = Color3.new(1,1,1)
+box.FocusLost:Connect(function()
+    TargetName = box.Text
+    WordIndex = 1
+end)
 
-OrionLib:Init()
+local startBtn = Instance.new("TextButton", frame)
+startBtn.Size = UDim2.new(0.45, 0, 0, 30)
+startBtn.Position = UDim2.new(0.05, 0, 0, 85)
+startBtn.Text = "START"
+startBtn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+startBtn.TextColor3 = Color3.new(0,1,0)
+startBtn.MouseButton1Click:Connect(function()
+    ChatSpam = true
+    StartSpam()
+end)
+
+local stopBtn = Instance.new("TextButton", frame)
+stopBtn.Size = UDim2.new(0.45, 0, 0, 30)
+stopBtn.Position = UDim2.new(0.5, 0, 0, 85)
+stopBtn.Text = "STOP"
+stopBtn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+stopBtn.TextColor3 = Color3.new(1,0,0)
+stopBtn.MouseButton1Click:Connect(function()
+    ChatSpam = false
+end)
 
