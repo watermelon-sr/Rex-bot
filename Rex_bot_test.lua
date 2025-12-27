@@ -13,20 +13,38 @@ local LocalPlayer = Players.LocalPlayer
 --====================
 local ChatSpam = false
 local BotLocked = false
-local TargetName = "RyZ HATERS"
+local TargetName = "" -- controlled ONLY by TextBox
 local WordIndex = 1
 local SpamThread = nil
 local PendingStart = false
 local LastMessageId = nil
 
+--====================
+-- EMOJIS
+--====================
+local Emojis = {
+    "😂🔥","😁💞","😑✌🏻","🚀","😁💕","🌴🔥","😂👌🏿","💪😁"
+}
+
+--====================
+-- WORD LIST
+--====================
 local Words = {
+    -- original words
     "BUILDING","CLASSROOM","STUDENT","KNOWLEDGE","LEARNING","SCIENCE","MATH","HISTORY",
     "GEOGRAPHY","PHYSICS","CHEMISTRY","BIOLOGY","LABORATORY","EXPERIMENT","FORMULA",
     "EQUATION","ENERGY","MOTION","SPACE","PLANET","GALAXY","UNIVERSE","QUANTUM",
     "ATOM","MOLECULE","ELECTRICITY","TECHNOLOGY","SOFTWARE","HARDWARE","INTERNET",
     "ALGORITHM","LOGIC","MEMORY","CREATIVITY","DISCOVERY","INNOVATION","FUTURE",
-    "AREY","BHAI","KYA","SCENE","OP","LOL","BINDASS","CHILL","MAST","JHAKKAS",
-    "😂🔥","😁💞","😑✌🏻","🚀","😁💕","🌴🔥","😂👌🏿","💪😁"
+
+    -- local / funny words (50+)
+    "CUDE","PGL","SUSU","POTY JAPAN","SKYROCKET","CUTIA","CHXMR","DALIT","CUDGY","BAUNI",
+    "KALVY","JHADU WALI","POCHA LGATY","PETICOAT","MURGI","TRACTOR","KHNJR","RDY",
+    "ACID","BASE","SALT","SPEED","HACLY","LAME","BHONDU","BIHRY","S1DE CH1CK",
+    "COTI","M0TY","DRUM","KEEDA","HELICOPTER","OYE","BHNGY","BHAGE","HAWSI",
+    "RUSIA","BUDHI","GUTKA","PAPPU","CHAMCHA","KAMINA","NAKKI","KHALI DIMAG",
+    "DHAKKAN","JOKER","TIKTOKIYA","GADHA","ULLU","BHOOTNI","NALLA","CHINDI",
+    "BHAISAAB","BOTAL","BESHARAM","HILTA","CHAMAK","LATTH","TADAK","BHUKKAD"
 }
 
 --====================
@@ -47,10 +65,15 @@ end
 --====================
 local function GetNextSpamMessage()
     local word = Words[WordIndex]
+    local emoji = Emojis[math.random(#Emojis)]
+
     WordIndex += 1
     if WordIndex > #Words then WordIndex = 1 end
+
+    local namePart = TargetName ~= "" and (TargetName .. " ") or ""
+
     return "_________________________________________________________________________________________________________________________________________________________________ "
-        .. TargetName .. " TRY MA " .. word
+        .. namePart .. "TRY MA " .. word .. " " .. emoji
 end
 
 --====================
@@ -72,14 +95,6 @@ end
 --====================
 local function HandleCommand(msg)
     msg = string.lower(msg)
-
-    local newName = msg:match("^bot change hater name to (.+)")
-    if newName then
-        TargetName = newName
-        WordIndex = 1
-        SendChat("__________________________________________________________________________________________________________________________________________________________ hater name changed to " .. newName)
-        return
-    end
 
     if BotLocked then
         if msg == "unlock bot" then
@@ -176,9 +191,11 @@ end)
 local box = Instance.new("TextBox", frame)
 box.Size = UDim2.new(1, -20, 0, 30)
 box.Position = UDim2.new(0, 10, 0, 40)
-box.Text = TargetName
+box.Text = ""
+box.PlaceholderText = "Enter name"
 box.BackgroundColor3 = Color3.fromRGB(20,20,20)
 box.TextColor3 = Color3.new(1,1,1)
+
 box.FocusLost:Connect(function()
     TargetName = box.Text
     WordIndex = 1
